@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 
-class NodoArbolBinario:
+class NodoArbolBinario:  # Nodo del arbol binario con los datos solicitados
     def __init__(self, id, nombre=None, edad=None, telefono=None):
         self.data = id
         self.nombre = nombre
@@ -12,10 +12,11 @@ class NodoArbolBinario:
         self.derecha = None
 
 
-class VentanaListado:
+class VentanaListado:  # Ventana unica del programa
     def __init__(self, ventana):
         self.ventana = ventana
 
+        # Frames para los datos ingresados (Mayor orden)
         self.info_frame = tk.Frame(ventana)
         self.info_frame.pack(side=tk.RIGHT)
 
@@ -28,6 +29,7 @@ class VentanaListado:
         self.search_frame = tk.Frame(ventana)
         self.search_frame.pack()
 
+        # Medidas de dibujo
         self.canvas_width = 800
         self.canvas_height = 300
         self.rect_width = 60
@@ -38,6 +40,7 @@ class VentanaListado:
 
         self.raiz = None
 
+        # Etiquietas, botones y recuadros para ingresar datos
         self.labelid = tk.Label(self.frame, text='ID')
         self.labelid.pack(side=tk.LEFT)
 
@@ -95,21 +98,22 @@ class VentanaListado:
         self.boton_abrir = tk.Button(self.info_frame, text='Abrir', command=self.abrir)
         self.boton_abrir.pack()
 
+    # Opcion de insertar
     def insertar(self):
         valor = self.dato.get()
         nombre = self.nombre.get()
         edad = self.edad.get()
         telefono = self.telefono.get()
         if valor:
-            nuevo_nodo = NodoArbolBinario(valor, nombre, edad, telefono)
+            nuevo_nodo = NodoArbolBinario(valor, nombre, edad, telefono) # Se ingresa a la clase nodo cada uno de los datos obtenidos
             if self.raiz is None:
                 self.raiz = nuevo_nodo
             else:
                 self.insertar_nodo(self.raiz, nuevo_nodo)
-            self.dibujar_arbol()
-            self.info()
+            self.dibujar_arbol()  # Se dibuja en el arbol
+            self.info()  # Se actualiza la informacion
             self.dato.delete(0, tk.END)
-            self.nombre.delete(0, tk.END)
+            self.nombre.delete(0, tk.END)  # Se borran los datos ingresados en las casillas
             self.edad.delete(0, tk.END)
             self.telefono.delete(0, tk.END)
 
@@ -154,6 +158,9 @@ class VentanaListado:
 
             temp = self.encontrar_minimo(nodo.derecha)
             nodo.data = temp.data
+            nodo.nombre = temp.nombre
+            nodo.edad = temp.edad
+            nodo.telefono = temp.telefono
             nodo.derecha = self.eliminar_valor(nodo.derecha, temp.data)
         return nodo
 
@@ -239,7 +246,7 @@ class VentanaListado:
 
     def preorden_guardar(self, nodo, file):
         if nodo:
-            file.write(nodo.data + '\n')
+            file.write(f'{nodo.data},{nodo.nombre},{nodo.edad},{nodo.telefono}\n')
             self.preorden_guardar(nodo.izquierda, file)
             self.preorden_guardar(nodo.derecha, file)
 
@@ -251,10 +258,9 @@ class VentanaListado:
 
     def listado(self, nodo, file):
         if nodo:
-            self.preorden_guardar(nodo.izquierda, file)
-            file.write(nodo.data + '\n')
-            self.preorden_guardar(nodo.derecha, file)
-
+            self.listado(nodo.izquierda, file)
+            file.write(f'{nodo.data},{nodo.nombre},{nodo.edad},{nodo.telefono}\n')
+            self.listado(nodo.derecha, file)
 
     def abrir(self):
         filename = filedialog.askopenfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt")])
@@ -262,28 +268,18 @@ class VentanaListado:
             with open(filename, "r") as f:
                 self.raiz = None
                 for line in f:
-                    valor = line.strip()
-                    self.insertar_desde_archivo(valor)
+                    data = line.strip().split(',')
+                    self.insertar_desde_archivo(data)
             self.dibujar_arbol()
             self.info()
 
-    def insertar_desde_archivo(self, valor):
+    def insertar_desde_archivo(self, data):
+        id, nombre, edad, telefono = data
+        nuevo_nodo = NodoArbolBinario(id, nombre, edad, telefono)
         if not self.raiz:
-            self.raiz = NodoArbolBinario(valor)
+            self.raiz = nuevo_nodo
         else:
-            self.insertar_desde_archivo_recursivo(valor, self.raiz)
-
-    def insertar_desde_archivo_recursivo(self, valor, nodo):
-        if int(valor) < int(nodo.data):
-            if nodo.izquierda is None:
-                nodo.izquierda = NodoArbolBinario(valor)
-            else:
-                self.insertar_desde_archivo_recursivo(valor, nodo.izquierda)
-        elif int(valor) > int(nodo.data):
-            if nodo.derecha is None:
-                nodo.derecha = NodoArbolBinario(valor)
-            else:
-                self.insertar_desde_archivo_recursivo(valor, nodo.derecha)
+            self.insertar_nodo(self.raiz, nuevo_nodo)
 
 
 def main():
